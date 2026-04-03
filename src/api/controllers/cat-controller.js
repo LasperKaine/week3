@@ -1,42 +1,35 @@
-import { listAllCats, findCatById, addCat, removeCat } from '../models/cat-model.js';
-const getCats = async (req, res) => {
+const getCats = async (req, res, next) => {
   try {
-    const cats = await listAllCats();
+    const cats = await fetchAllCats();
     res.json(cats);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-const getCat = async (req, res) => {
+const postCat = async (req, res, next) => {
   try {
-    const cat = await findCatById(req.params.id);
-    if (!cat) return res.status(404).json({ error: 'Cat not found' });
-    res.json(cat);
+    if (!req.file) {
+      const error = new Error('Invalid or missing file');
+      error.status = 400;
+      return next(error);
+    }
+
+    const newCat = {
+      cat_name: req.body.cat_name,
+      weight: req.body.weight,
+      owner: req.body.owner,
+      birthdate: req.body.birthdate,
+      file: req.file.filename,
+    };
+
+    const result = await addCat(newCat); // your model function
+    if (result.error) return next(new Error(result.error));
+
+    res.status(201).json({ message: 'New cat added', ...result });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-const createCat = async (req, res) => {
-  try {
-    const cat = req.body;
-    if (req.file) cat.filename = req.file.filename; // attach uploaded filename
-    const result = await addCat(cat);
-    res.status(201).json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-const deleteCat = async (req, res) => {
-  try {
-    const result = await removeCat(req.params.id);
-    if (!result) return res.status(404).json({ error: 'Cat not found' });
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-export { getCats, getCat, createCat, deleteCat };
+export { getCats, postCat };

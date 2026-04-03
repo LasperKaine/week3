@@ -1,21 +1,11 @@
 import express from 'express';
-import multer from 'multer';
-import { createThumbnail } from '../../middlewares/upload.js';
-import { getCats, getCat, createCat, deleteCat } from '../controllers/cat-controller.js'; // <-- use these
+import { getCats, postCat } from '../controllers/cat-controller.js';
+import { upload } from '../../middlewares/upload.js';
+import { authenticateToken } from '../../middlewares/authentication.js';
 
-const router = express.Router();
+const catRouter = express.Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'src/uploads'),
-  filename: (req, file, cb) => cb(null, file.originalname),
-});
+catRouter.get('/', getCats);
+catRouter.post('/', authenticateToken, upload.single('file'), postCat);
 
-const upload = multer({ storage });
-
-// Routes
-router.get('/', getCats);              // list all cats
-router.get('/:id', getCat);            // get single cat
-router.post('/', upload.single('image'), createThumbnail, createCat); // add cat
-router.delete('/:id', deleteCat);      // remove cat
-
-export default router;
+export default catRouter;
