@@ -1,9 +1,25 @@
 import express from 'express';
-import { getCat, getCatById, postCat, putCat, deleteCat } from '../controllers/cat-controller.js';
+import multer from 'multer';
+import { createThumbnail } from '../../middlewares/upload.js';
 
 const catRouter = express.Router();
 
-catRouter.route('/').get(getCat).post(postCat);
-catRouter.route('/:id').get(getCatById).put(putCat).delete(deleteCat);
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'src/uploads'),
+  filename: (req, file, cb) => cb(null, file.originalname),
+});
+
+const upload = multer({ storage });
+
+const postCat = (req, res) => {
+  console.log('File info:', req.file);
+  res.json({
+    message: 'Cat uploaded!',
+    file: req.file,
+  });
+};
+
+// Route
+catRouter.post('/', upload.single('image'), createThumbnail, postCat);
 
 export default catRouter;
