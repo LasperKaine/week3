@@ -1,30 +1,22 @@
-import sharp from 'sharp';
-import path from 'path';
+import multer from 'multer';
 
-const createThumbnail = async (req, res, next) => {
-  if (!req.file) return next();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, file.originalname),
+});
 
-  try {
-    const { path: filePath, originalname } = req.file;
-    const ext = path.extname(originalname); // .jpg, .png, etc
-    const nameWithoutExt = path.basename(originalname, ext);
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      const error = new Error('Only images and videos allowed!');
+      error.status = 400;
+      cb(error, false);
+    }
+  },
+});
 
-    const thumbFilename = `${nameWithoutExt}_thumb.png`;
-    const thumbPath = path.join(path.dirname(filePath), thumbFilename);
-
-    await sharp(filePath)
-      .resize(160, 160)
-      .png()
-      .toFile(thumbPath);
-
-    console.log(`Thumbnail saved: ${thumbPath}`);
-    req.file.thumbnail = thumbPath;
-
-    next();
-  } catch (err) {
-    console.error(err);
-    next(err);
-  }
-};
-
-export { createThumbnail };
+export { upload };
