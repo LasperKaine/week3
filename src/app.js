@@ -1,6 +1,7 @@
 import express from 'express';
 import userRouter from './api/routes/user-router.js';
 import catRouter from './api/routes/cat-router.js';
+import cors from 'cors';
 
 const router = express.Router();
 
@@ -10,6 +11,7 @@ router.use('/users', userRouter);
 const app = express();
 const PORT = 3000;
 
+app.use(cors());
 app.use(express.json());
 app.use('/api/v1/cats', catRouter);
 
