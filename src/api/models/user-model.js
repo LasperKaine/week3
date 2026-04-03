@@ -29,4 +29,13 @@ const addUser = (user) => {
   return newUser;
 };
 
+const findUserByUsername = async (username) => {
+  const [rows] = await promisePool.execute(
+    'SELECT * FROM wsk_users WHERE username = ?', [username]
+  );
+  return rows[0] || null;
+};
+
+export { findUserByUsername };
+
 export { listAllUsers, findUserById, addUser };
